@@ -23,6 +23,22 @@ let selectedModelIndex = null; // index aktuálne vybraného modelu
 
 const correctPassword = 'admin123';
 
+// Pomocná funkcia na konverziu cesty na file:// URL
+function toFileUrl(path) {
+  if (path.startsWith('\\\\')) {
+    // UNC cesta, napr. \\server\share\file
+    return 'file://' + path.replace(/\\/g, '/').slice(2);
+  }
+  const windowsDrivePath = /^[a-zA-Z]:\\/;
+  if (windowsDrivePath.test(path)) {
+    // Lokálna cesta, napr. C:\folder\file
+    let p = path.replace(/\\/g, '/');
+    return 'file:///' + p;
+  }
+  // Iná URL alebo už formátovaná URL nechaj tak
+  return path;
+}
+
 // Zmena profilu (user/admin)
 function changeProfile(profile) {
   if (profile === 'admin') {
@@ -135,16 +151,6 @@ function showModels(pass) {
   });
 }
 
-// Prevedie Windows cestu na file:/// URL
-function convertToFileProtocol(url) {
-  if (/^[a-zA-Z]:\\/.test(url)) {
-    let path = url.replace(/\\/g, '/');
-    path = encodeURI(path);
-    return 'file:///' + path;
-  }
-  return url;
-}
-
 // Zobrazenie dokumentácie a URL pre zvolený model
 function renderDocContent(model) {
   const contentArea = document.getElementById('content-area');
@@ -154,11 +160,15 @@ function renderDocContent(model) {
       <div>
         <h3>${model.docTitle}</h3>
         <ul id="doc-links" style="list-style: none; padding-left: 0;">
-          ${model.urls.map((url, idx) => `
-            <li data-index="${idx}" style="display: flex; align-items: center; margin-bottom: 5px;">
-              <a href="${convertToFileProtocol(url)}" target="_blank" style="flex-grow: 1;">${url}</a>
-              ${currentProfile === 'admin' ? `<button class="delete-url-btn" data-url="${url}" title="Vymazať URL" style="background-color: #dc3545; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; margin-left: 10px;">−</button>` : ''}
-            </li>`).join('')}
+          ${model.urls.map((url, idx) => {
+            const fileUrl = toFileUrl(url);
+            return `
+              <li data-index="${idx}" style="display: flex; align-items: center; margin-bottom: 5px;">
+                <a href="${fileUrl}" target="_blank" style="flex-grow: 1;">${url}</a>
+                ${currentProfile === 'admin' ? `<button class="delete-url-btn" data-idx="${idx}" title="Vymazať URL" style="background-color: #dc3545; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; margin-left: 10px;">−</button>` : ''}
+              </li>
+            `;
+          }).join('')}
         </ul>
       </div>
       ${currentProfile === 'admin' ? `<button id="add-url-button" style="background: #28a745; color: white; border: none; border-radius: 50%; font-size: 22px; width: 36px; height: 36px; cursor: pointer;">＋</button>` : ''}
@@ -169,7 +179,7 @@ function renderDocContent(model) {
 
   if (currentProfile === 'admin') {
     document.getElementById('add-url-button').onclick = () => {
-      const newUrl = prompt("Zadajte novú URL dokumentácie:");
+      const newUrl = prompt("Zadajte novú URL dokumentácie alebo cestu k súboru:");
       if (newUrl && newUrl.trim()) {
         model.urls.push(newUrl.trim());
         saveData();
@@ -180,14 +190,11 @@ function renderDocContent(model) {
     const deleteButtons = contentArea.querySelectorAll('.delete-url-btn');
     deleteButtons.forEach(btn => {
       btn.onclick = () => {
-        const url = btn.dataset.url;
-        if (confirm(`Naozaj chcete vymazať túto URL?\n${url}`)) {
-          const idx = model.urls.indexOf(url);
-          if (idx > -1) {
-            model.urls.splice(idx, 1);
-            saveData();
-            renderDocContent(model);
-          }
+        const idx = parseInt(btn.dataset.idx, 10);
+        if (!isNaN(idx) && confirm(`Naozaj chcete vymazať túto URL?\n${model.urls[idx]}`)) {
+          model.urls.splice(idx, 1);
+          saveData();
+          renderDocContent(model);
         }
       };
     });
@@ -249,4 +256,5 @@ function submitNewModel(event) {
 
 // Pripojiť eventy na tlačidlá
 document.getElementById('add-model-btn').onclick = openModelModal;
+document.getElementById('profile').onchange = (e) => changeProfile(e.target.value);
 document.getElementById('close-modal').onclick = closeModal;
