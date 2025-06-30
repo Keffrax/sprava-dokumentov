@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Správa dokumentácie</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Správa dokumentácie</h1>
+
+  <!-- Výber profilu -->
+  <div id="profile-select" style="margin-bottom: 40px; text-align: center;">
+    <label for="profile">Vyber profil:</label>
+    <select id="profile" onchange="changeProfile(this.value)" style="font-size: 18px; padding: 5px 10px; margin-left: 10px;">
+      <option value="user" selected>Užívateľ</option>
+      <option value="admin">Správca</option>
+    </select>
+  </div>
+
+  <!-- Tlačidlá PASS -->
+  <div class="button-container" id="pass-buttons">
+    <button class="btn" onclick="showModels('PASS1')">PASS1</button>
+    <button class="btn" onclick="showModels('PASS2')">PASS2</button>
+    <button class="btn" onclick="showModels('PASS3')">PASS3</button>
+  </div>
+
+  <div id="container">
+    <div id="model-column">
+      <div id="model-header" style="display: none; align-items: center; justify-content: space-between;">
+        <h2 style="margin: 0;">Modely</h2>
+        <button id="add-model-btn" onclick="openModelModal()">＋</button>
+      </div>
+      <div id="model-list"></div>
+    </div>
+    <div id="content-area">
+      <div id="doc-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <p>Vyber model pre zobrazenie dokumentácie.</p>
+      </div>
+    </div>
+
+  <!-- Modal na pridanie modelu -->
+  <div id="model-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close" onclick="closeModelModal()">&times;</span>
+      <h3>Pridať nový model</h3>
+      <form onsubmit="return submitNewModel(event)">
+        <label for="new-model-name">Názov modelu:</label><br>
+        <input type="text" id="new-model-name" required><br><br>
+        <button type="submit">Pridať</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal pre heslo správcu -->
+  <div id="password-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span id="close-modal" class="close">&times;</span>
+      <h3>Zadajte heslo pre profil Správca</h3>
+      <input id="password-input" type="password" placeholder="Heslo" />
+      <button onclick="verifyPassword()">Potvrdiť</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
